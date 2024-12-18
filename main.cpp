@@ -25,9 +25,24 @@ void printMatrix(const vector<vector<int>>& matrix) {
     }
 }
 
-int getMinColumnsSum(const vector<vector<int>>& matrix, int rows, int cols, int threads) {
+int getMinColumnsSumParallel(const vector<vector<int>>& matrix, int rows, int cols, int threads) {
     int minSum = INT_MAX;
     #pragma omp parallel for num_threads(threads) reduction(min:minSum)
+    for (int j = 0; j < cols; ++j) {
+        int columnSum = 0;
+        for (int i = 0; i < rows; ++i) {
+            columnSum += matrix[i][j];
+        }
+        if (columnSum < minSum) {
+            minSum = columnSum;
+        }
+    }
+
+    return minSum;
+}
+
+int getMinColumnsSum(const vector<vector<int>>& matrix, int rows, int cols) {
+    int minSum = INT_MAX;
     for (int j = 0; j < cols; ++j) {
         int columnSum = 0;
         for (int i = 0; i < rows; ++i) {
@@ -75,7 +90,7 @@ struct Experiment {
 
 int main()
 {
-    int num_experiments = 8;
+    int num_experiments = 22;
     Experiment* experiments = new Experiment[num_experiments];
     experiments[0] = {10000, 2};
     experiments[1] = {10000, 4};
@@ -85,21 +100,20 @@ int main()
     experiments[5] = {10000, 12};
     experiments[6] = {10000, 14};
     experiments[7] = {10000, 16};
-
-    /*experiments[0] = {1000, 4};
-    experiments[1] = {2000, 4};
-    experiments[2] = {4000, 4};
-    experiments[3] = {8000, 4};
-    experiments[4] = {10000, 4};
-    experiments[5] = {20000, 4};
-    experiments[6] = {50000, 4};
-    experiments[7] = {1000, 8};
-    experiments[8] = {2000, 8};
-    experiments[9] = {4000, 8};
-    experiments[10] = {8000, 8};
-    experiments[11] = {10000, 8};
-    experiments[12] = {20000, 8};
-    experiments[13] = {50000, 8};*/
+    experiments[8] = {1000, 4};
+    experiments[9] = {2000, 4};
+    experiments[10] = {4000, 4};
+    experiments[11] = {8000, 4};
+    experiments[12] = {10000, 4};
+    experiments[13] = {20000, 4};
+    experiments[14] = {50000, 4};
+    experiments[15] = {1000, 8};
+    experiments[16] = {2000, 8};
+    experiments[17] = {4000, 8};
+    experiments[18] = {8000, 8};
+    experiments[19] = {10000, 8};
+    experiments[20] = {20000, 8};
+    experiments[21] = {50000, 8};
     vector<string> multi_thread_times = {"Tp ticks"};
     vector<string> single_thread_times = {"T1 ticks"};
     vector<vector<string>> data = {multi_thread_times, single_thread_times};
@@ -114,12 +128,12 @@ int main()
 
         //Calculating time for given number of threads
         double start = omp_get_wtime();
-        int minSum = getMinColumnsSum(matrix, rows, cols, experiments[experiment].threads);
+        int minSum = getMinColumnsSumParallel(matrix, rows, cols, experiments[experiment].threads);
         double end = omp_get_wtime();
 
         //Calculating time for 1 thread
         double start_single_thread = omp_get_wtime();
-        int minSum_single_thread = getMinColumnsSum(matrix, rows, cols, 1);
+        int minSum_single_thread = getMinColumnsSum(matrix, rows, cols);
         double end_single_thread = omp_get_wtime();
 
 
